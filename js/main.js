@@ -1,85 +1,209 @@
-const menuToggle = document.querySelector(".site-header__menu-toggle");
-const primaryNav = document.querySelector(".site-nav");
+/**
+ * Initializes the responsive navigation and its keyboard behavior.
+ */
+const initMobileMenu = () => {
+  const menuToggle = document.querySelector(".site-header__menu-toggle");
+  const navigation = document.querySelector(".site-nav");
 
-if (menuToggle && primaryNav) {
+  if (!menuToggle || !navigation) {
+    return;
+  }
+
+  const closeMenu = () => {
+    menuToggle.setAttribute("aria-expanded", "false");
+    navigation.classList.remove("site-nav--open");
+  };
+
   menuToggle.addEventListener("click", () => {
     const isExpanded = menuToggle.getAttribute("aria-expanded") === "true";
     menuToggle.setAttribute("aria-expanded", String(!isExpanded));
-    primaryNav.classList.toggle("site-nav--open", !isExpanded);
+    navigation.classList.toggle("site-nav--open", !isExpanded);
   });
 
-  primaryNav.addEventListener("click", (event) => {
-    if (event.target instanceof Element && event.target.closest("a")) {
-      menuToggle.setAttribute("aria-expanded", "false");
-      primaryNav.classList.remove("site-nav--open");
+  navigation.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", closeMenu);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && menuToggle.getAttribute("aria-expanded") === "true") {
+      closeMenu();
+      menuToggle.focus();
     }
   });
-}
+};
 
-document.querySelectorAll(".faq-item__question").forEach((question) => {
-  question.addEventListener("click", () => {
-    const isExpanded = question.getAttribute("aria-expanded") === "true";
-    const answerId = question.getAttribute("aria-controls");
-    const answer = answerId ? document.getElementById(answerId) : null;
+/**
+ * Initializes the single-open FAQ accordion with animated panel heights.
+ */
+const initAccordion = () => {
+  const questions = document.querySelectorAll(".faq-item__question");
 
-    if (!answer) {
-      return;
-    }
+  const afterHeightTransition = (panel, callback) => {
+    const handleTransitionEnd = (event) => {
+      if (event.target !== panel || event.propertyName !== "height") {
+        return;
+      }
 
-    question.setAttribute("aria-expanded", String(!isExpanded));
-    answer.hidden = isExpanded;
-  });
-});
+      panel.removeEventListener("transitionend", handleTransitionEnd);
+      callback();
+    };
 
-const billingOptions = document.querySelectorAll(".billing-toggle__option");
-const prices = document.querySelectorAll(".pricing-card__amount");
-const billingNotes = document.querySelectorAll(".pricing-card__billing");
+    panel.addEventListener("transitionend", handleTransitionEnd);
+  };
 
-billingOptions.forEach((option) => {
-  option.addEventListener("click", () => {
-    const period = option.dataset.period;
+  const closePanel = (question, panel) => {
+    question.setAttribute("aria-expanded", "false");
+    panel.style.height = `${panel.scrollHeight}px`;
+    panel.offsetHeight;
+    panel.style.height = "0px";
 
-    if (period !== "monthly" && period !== "yearly") {
-      return;
-    }
-
-    billingOptions.forEach((button) => {
-      const isActive = button === option;
-      button.setAttribute("aria-pressed", String(isActive));
-    });
-
-    prices.forEach((price) => {
-      const amount = price.dataset[period];
-      if (amount) {
-        price.textContent = `$${amount}`;
+    afterHeightTransition(panel, () => {
+      if (question.getAttribute("aria-expanded") === "false") {
+        panel.hidden = true;
+        panel.style.height = "";
       }
     });
+  };
 
-    billingNotes.forEach((note) => {
-      const message = note.dataset[`${period}Note`];
-      if (message) {
-        note.textContent = message;
+  const openPanel = (question, panel) => {
+    panel.hidden = false;
+    panel.style.height = "0px";
+    question.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => {
+      panel.style.height = `${panel.scrollHeight}px`;
+    });
+
+    afterHeightTransition(panel, () => {
+      if (question.getAttribute("aria-expanded") === "true") {
+        panel.style.height = "auto";
+      }
+    });
+  };
+
+  questions.forEach((question) => {
+    question.addEventListener("click", () => {
+      const panelId = question.getAttribute("aria-controls");
+      const panel = panelId ? document.getElementById(panelId) : null;
+
+      if (!panel) {
+        return;
+      }
+
+      const isExpanded = question.getAttribute("aria-expanded") === "true";
+      questions.forEach((openQuestion) => {
+        if (openQuestion === question || openQuestion.getAttribute("aria-expanded") !== "true") {
+          return;
+        }
+
+        const openPanelId = openQuestion.getAttribute("aria-controls");
+        const openPanelElement = openPanelId ? document.getElementById(openPanelId) : null;
+        if (openPanelElement) {
+          closePanel(openQuestion, openPanelElement);
+        }
+      });
+
+      if (isExpanded) {
+        closePanel(question, panel);
+      } else {
+        openPanel(question, panel);
       }
     });
   });
-});
+};
 
-document.querySelectorAll("[data-plan]").forEach((planLink) => {
-  planLink.addEventListener("click", () => {
-    const planSelect = document.querySelector("#plan");
-    if (planSelect instanceof HTMLSelectElement) {
-      const plan = planLink.getAttribute("data-plan");
-      if (plan) {
-        planSelect.value = plan;
+/**
+ * Initializes monthly/yearly pricing and the yearly-savings badge.
+ */
+const initPricingToggle = () => {
+  const options = document.querySelectorAll(".billing-toggle__option");
+  const prices = document.querySelectorAll(".pricing-card__amount");
+  const billingNotes = document.querySelectorAll(".pricing-card__billing");
+  const savingsBadge = document.querySelector(".billing-toggle__savings");
+
+  options.forEach((option) => {
+    option.addEventListener("click", () => {
+      const period = option.dataset.period;
+
+      if (period !== "monthly" && period !== "yearly") {
+        return;
       }
-    }
+
+      options.forEach((billingOption) => {
+        billingOption.setAttribute("aria-pressed", String(billingOption === option));
+      });
+
+      prices.forEach((price) => {
+        const amount = price.dataset[period];
+        if (amount) {
+          price.textContent = `$${amount}`;
+        }
+      });
+
+      billingNotes.forEach((note) => {
+        const message = note.dataset[`${period}Note`];
+        if (message) {
+          note.textContent = message;
+        }
+      });
+
+      if (savingsBadge) {
+        savingsBadge.hidden = period !== "yearly";
+      }
+    });
   });
-});
+};
 
-const signupForm = document.querySelector("#signup-form");
-const formMessage = document.querySelector("#form-message");
+/**
+ * Adds a visual shadow to the sticky header after scrolling past 10px.
+ */
+const initHeaderShadow = () => {
+  const header = document.querySelector(".site-header");
 
-if (signupForm instanceof HTMLFormElement && formMessage) {
+  if (!header) {
+    return;
+  }
+
+  const updateHeaderShadow = () => {
+    header.classList.toggle("site-header--scrolled", window.scrollY > 10);
+  };
+
+  window.addEventListener("scroll", updateHeaderShadow, { passive: true });
+  updateHeaderShadow();
+};
+
+/**
+ * Sets the displayed copyright year to the current year.
+ */
+const initFooterYear = () => {
+  const yearLabel = document.querySelector("#current-year");
+  if (yearLabel) {
+    yearLabel.textContent = String(new Date().getFullYear());
+  }
+};
+
+/**
+ * Preserves the existing client-side sign-up confirmation and plan selection.
+ */
+const initSignupForm = () => {
+  const signupForm = document.querySelector("#signup-form");
+  const formMessage = document.querySelector("#form-message");
+  const planSelect = document.querySelector("#plan");
+
+  document.querySelectorAll("[data-plan]").forEach((planLink) => {
+    planLink.addEventListener("click", () => {
+      if (planSelect instanceof HTMLSelectElement) {
+        const plan = planLink.getAttribute("data-plan");
+        if (plan) {
+          planSelect.value = plan;
+        }
+      }
+    });
+  });
+
+  if (!(signupForm instanceof HTMLFormElement) || !formMessage) {
+    return;
+  }
+
   signupForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
@@ -91,9 +215,18 @@ if (signupForm instanceof HTMLFormElement && formMessage) {
     formMessage.textContent = `Thanks${typeof name === "string" && name.trim() ? `, ${name.trim()}` : ""}! Your details are validated. Connect a sign-up service to receive this request.`;
     signupForm.reset();
   });
-}
+};
 
-const yearLabel = document.querySelector("#current-year");
-if (yearLabel) {
-  yearLabel.textContent = String(new Date().getFullYear());
-}
+/**
+ * Initializes all page interactions after the document has been parsed.
+ */
+const init = () => {
+  initMobileMenu();
+  initAccordion();
+  initPricingToggle();
+  initHeaderShadow();
+  initFooterYear();
+  initSignupForm();
+};
+
+document.addEventListener("DOMContentLoaded", init);

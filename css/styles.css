@@ -65,7 +65,8 @@ h1, h2, h3 { font-family: var(--font-display); }
 .badge { display: inline-flex; align-items: center; width: fit-content; padding: .4rem .7rem; border-radius: var(--radius-pill); color: var(--color-brand-dark); background: var(--color-accent-soft); font-size: .68rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
 .badge--popular { color: var(--color-brand-deep); background: var(--color-accent); letter-spacing: .02em; text-transform: none; }
 
-.site-header { position: sticky; z-index: 10; top: 0; background: rgba(255,255,255,.96); border-bottom: 1px solid rgba(16,35,63,.08); backdrop-filter: blur(14px); }
+.site-header { position: sticky; z-index: 10; top: 0; background: rgba(255,255,255,.96); border-bottom: 1px solid rgba(16,35,63,.08); backdrop-filter: blur(14px); transition: box-shadow .2s ease; }
+.site-header--scrolled { box-shadow: 0 8px 24px rgba(16,35,63,.1); }
 .site-header__inner { min-height: 4.7rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
 .site-header__brand { display: inline-flex; align-items: center; gap: .65rem; color: var(--color-brand-dark); font: 800 1.05rem/1 var(--font-display); letter-spacing: -.04em; white-space: nowrap; }
 .site-header__brand-mark { width: 2rem; height: 2rem; display: grid; place-items: center; color: var(--color-brand-dark); background: var(--color-accent); border-radius: 50%; font-size: 1.1rem; font-style: italic; }
@@ -191,7 +192,9 @@ h1, h2, h3 { font-family: var(--font-display); }
 .faq-item__icon::before, .faq-item__icon::after { content: ""; position: absolute; top: 50%; left: 50%; width: .55rem; height: 1px; background: var(--color-brand); transform: translate(-50%, -50%); transition: transform .2s; }
 .faq-item__icon::after { transform: translate(-50%, -50%) rotate(90deg); }
 .faq-item__question[aria-expanded="true"] .faq-item__icon::after { transform: translate(-50%, -50%); }
-.faq-item__answer { padding: 0 2.2rem 1.1rem .15rem; }
+.faq-item__answer { height: 0; overflow: hidden; padding: 0 2.2rem 0 .15rem; transition: height .25s ease, padding-bottom .25s ease; }
+.faq-item__answer:not([hidden]) { padding-bottom: 1.1rem; }
+.faq-item__answer[hidden] { display: none; }
 .faq-item__answer p { margin: 0; color: var(--color-muted); font-size: .78rem; line-height: 1.8; }
 
 .signup { padding-block: 4.5rem; color: white; background: var(--color-brand-dark); }
