@@ -182,6 +182,45 @@ const initFooterYear = () => {
 };
 
 /**
+ * Applies the saved color theme and persists changes made with the theme button.
+ */
+const initDarkModeToggle = () => {
+  const toggle = document.querySelector(".theme-toggle");
+  const toggleLabel = toggle?.querySelector(".theme-toggle__label");
+
+  if (!(toggle instanceof HTMLButtonElement) || !toggleLabel) {
+    return;
+  }
+
+  let isDarkMode = false;
+
+  try {
+    isDarkMode = localStorage.getItem("vicwin-theme") === "dark";
+  } catch (error) {
+    console.error("Unable to read the saved color theme.", error);
+  }
+
+  const applyTheme = () => {
+    document.documentElement.dataset.theme = isDarkMode ? "dark" : "light";
+    toggle.setAttribute("aria-pressed", String(isDarkMode));
+    toggleLabel.textContent = isDarkMode ? "Light mode" : "Dark mode";
+  };
+
+  applyTheme();
+
+  toggle.addEventListener("click", () => {
+    isDarkMode = !isDarkMode;
+    applyTheme();
+
+    try {
+      localStorage.setItem("vicwin-theme", isDarkMode ? "dark" : "light");
+    } catch (error) {
+      console.error("Unable to save the selected color theme.", error);
+    }
+  });
+};
+
+/**
  * Validates sign-up details and persists successful submissions in localStorage.
  */
 const initSignupForm = () => {
@@ -323,6 +362,7 @@ const init = () => {
   initPricingToggle();
   initHeaderShadow();
   initFooterYear();
+  initDarkModeToggle();
   initSignupForm();
 };
 
