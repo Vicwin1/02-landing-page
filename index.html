@@ -157,21 +157,25 @@
       <section class="signup" id="signup">
         <div class="container signup__grid">
           <div class="signup__copy"><p class="eyebrow eyebrow--gold">YOUR NEXT CHAPTER</p><h2 class="signup__title">Ready when<br><em>you are.</em></h2><p class="signup__copy-text">Take the first step. Tell us a little about yourself and we'll help you find your place at Vicwin.</p><div class="signup__note"><span class="signup__note-icon" aria-hidden="true">✦</span><p class="signup__note-copy"><strong>Your first week is free.</strong><br>Come meet your new favorite place to move.</p></div></div>
-          <form class="signup-form" id="signup-form">
+          <form class="signup-form" id="signup-form" novalidate>
             <h3 class="signup-form__title">Let's get to know you.</h3>
             <p class="signup-form__intro">We'll be in touch to help you get started.</p>
             <label class="signup-form__label" for="full-name">Full name</label>
-            <input class="signup-form__input" id="full-name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
+            <input class="signup-form__input" id="full-name" name="name" type="text" autocomplete="name" placeholder="Your name" aria-describedby="name-error" required>
+            <span class="signup-form__error" id="name-error"></span>
             <label class="signup-form__label" for="email">Email address</label>
-            <input class="signup-form__input" id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            <input class="signup-form__input" id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" aria-describedby="email-error" required>
+            <span class="signup-form__error" id="email-error"></span>
             <label class="signup-form__label" for="plan">I'm interested in</label>
-            <select class="signup-form__select" id="plan" name="plan" required>
+            <select class="signup-form__select" id="plan" name="plan" aria-describedby="plan-error" required>
               <option value="" disabled selected>Choose a membership</option>
               <option value="Basic">Basic — Find your flow</option>
               <option value="Pro">Pro — Build your strength</option>
               <option value="Vip">VIP — Make it personal</option>
             </select>
-            <label class="signup-form__checkbox" for="terms"><input id="terms" name="terms" type="checkbox" required><span>I agree to the <a href="#footer">terms of service</a> and privacy policy.</span></label>
+            <span class="signup-form__error" id="plan-error"></span>
+            <label class="signup-form__checkbox" for="terms"><input id="terms" name="terms" type="checkbox" aria-describedby="terms-error" required><span>I agree to the <a href="#footer">terms of service</a> and privacy policy.</span></label>
+            <span class="signup-form__error" id="terms-error"></span>
             <button class="btn btn--primary signup-form__submit" type="submit">Get my free week <span aria-hidden="true">→</span></button>
             <p class="signup-form__message" id="form-message" role="status" aria-live="polite"></p>
             <p class="signup-form__privacy">Your details stay with us. No spam, ever.</p>

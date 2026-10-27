@@ -213,8 +213,13 @@ h1, h2, h3 { font-family: var(--font-display); }
 .signup-form__input, .signup-form__select { width: 100%; min-height: 2.8rem; padding: .65rem .75rem; color: var(--color-ink); background: white; border: 1px solid #d9dfe6; border-radius: var(--radius-sm); font-size: .76rem; }
 .signup-form__input::placeholder { color: #9aa4b1; }
 .signup-form__input:focus, .signup-form__select:focus { outline: 3px solid rgba(53,105,168,.2); border-color: var(--color-brand); }
+.signup-form__input[aria-invalid="true"], .signup-form__select[aria-invalid="true"] { border-color: #b42318; }
+.signup-form__input[aria-invalid="true"]:focus, .signup-form__select[aria-invalid="true"]:focus { outline-color: rgba(180,35,24,.2); }
+.signup-form__error { display: block; margin-top: .3rem; color: #b42318; font-size: .7rem; line-height: 1.5; }
+.signup-form__error:empty { display: none; }
 .signup-form__checkbox { display: flex; align-items: flex-start; gap: .55rem; margin: 1rem 0; color: #596678; font-size: .68rem; line-height: 1.6; }
 .signup-form__checkbox input { flex: 0 0 auto; margin: .2rem 0 0; accent-color: var(--color-brand); }
+.signup-form__checkbox input[aria-invalid="true"] { outline: 2px solid #b42318; outline-offset: 2px; }
 .signup-form__checkbox a { color: var(--color-brand); text-decoration: underline; text-underline-offset: .15rem; }
 .signup-form__submit { width: 100%; }
 .signup-form__message { margin: .6rem 0 0; color: #27623e; font-size: .72rem; font-weight: 700; }

@@ -182,38 +182,135 @@ const initFooterYear = () => {
 };
 
 /**
- * Preserves the existing client-side sign-up confirmation and plan selection.
+ * Validates sign-up details and persists successful submissions in localStorage.
  */
 const initSignupForm = () => {
   const signupForm = document.querySelector("#signup-form");
   const formMessage = document.querySelector("#form-message");
   const planSelect = document.querySelector("#plan");
+  const nameInput = document.querySelector("#full-name");
+  const emailInput = document.querySelector("#email");
+  const termsInput = document.querySelector("#terms");
+
+  if (
+    !(signupForm instanceof HTMLFormElement) ||
+    !(nameInput instanceof HTMLInputElement) ||
+    !(emailInput instanceof HTMLInputElement) ||
+    !(planSelect instanceof HTMLSelectElement) ||
+    !(termsInput instanceof HTMLInputElement) ||
+    !formMessage
+  ) {
+    return;
+  }
 
   document.querySelectorAll("[data-plan]").forEach((planLink) => {
     planLink.addEventListener("click", () => {
-      if (planSelect instanceof HTMLSelectElement) {
-        const plan = planLink.getAttribute("data-plan");
-        if (plan) {
-          planSelect.value = plan;
-        }
+      const plan = planLink.getAttribute("data-plan");
+      if (plan) {
+        planSelect.value = plan;
+        planSelect.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
   });
 
-  if (!(signupForm instanceof HTMLFormElement) || !formMessage) {
-    return;
-  }
+  const fields = [
+    {
+      input: nameInput,
+      error: document.querySelector("#name-error"),
+      validate: () => nameInput.value.trim().length >= 25
+        ? ""
+        : "Please enter your full name using at least 25 characters.",
+    },
+    {
+      input: emailInput,
+      error: document.querySelector("#email-error"),
+      validate: () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailInput.value.trim())
+        ? ""
+        : "Please enter a valid email address.",
+    },
+    {
+      input: planSelect,
+      error: document.querySelector("#plan-error"),
+      validate: () => planSelect.value
+        ? ""
+        : "Please select a membership plan.",
+    },
+    {
+      input: termsInput,
+      error: document.querySelector("#terms-error"),
+      validate: () => termsInput.checked
+        ? ""
+        : "Please agree to the terms to continue.",
+    },
+  ];
+
+  const validateField = (field) => {
+    if (!(field.error instanceof HTMLElement)) {
+      return false;
+    }
+
+    const message = field.validate();
+    field.error.textContent = message;
+    field.input.setAttribute("aria-invalid", String(Boolean(message)));
+    return !message;
+  };
+
+  fields.forEach((field) => {
+    const eventName = field.input instanceof HTMLInputElement && field.input.type !== "checkbox"
+      ? "input"
+      : "change";
+
+    field.input.addEventListener(eventName, () => {
+      validateField(field);
+      formMessage.textContent = "";
+    });
+  });
 
   signupForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
-    if (!signupForm.reportValidity()) {
+    const isValid = fields.reduce((valid, field) => validateField(field) && valid, true);
+    if (!isValid) {
+      formMessage.textContent = "";
+      fields.find((field) => field.input.getAttribute("aria-invalid") === "true")?.input.focus();
       return;
     }
 
-    const name = new FormData(signupForm).get("name");
-    formMessage.textContent = `Thanks${typeof name === "string" && name.trim() ? `, ${name.trim()}` : ""}! Your details are validated. Connect a sign-up service to receive this request.`;
-    signupForm.reset();
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const plan = planSelect.value;
+
+    try {
+      const savedSignups = localStorage.getItem("signups");
+      const signups = savedSignups ? JSON.parse(savedSignups) : [];
+
+      if (!Array.isArray(signups)) {
+        throw new TypeError('The "signups" localStorage value must be an array.');
+      }
+
+      const hasSignedUp = signups.some((signup) =>
+        signup &&
+        typeof signup.email === "string" &&
+        signup.email.trim().toLowerCase() === email.toLowerCase()
+      );
+
+      if (hasSignedUp) {
+        formMessage.textContent = "You've already signed up";
+        return;
+      }
+
+      signups.push({ name, email, plan, createdAt: new Date().toISOString() });
+      localStorage.setItem("signups", JSON.stringify(signups));
+      signupForm.reset();
+      fields.forEach((field) => {
+        field.error.textContent = "";
+        field.input.removeAttribute("aria-invalid");
+      });
+      formMessage.textContent = `Thanks, ${name}! Your sign-up has been saved.`;
+    } catch (error) {
+      console.error("Unable to save the sign-up in localStorage.", error);
+      formMessage.textContent = "We couldn't save your sign-up. Please check your browser storage settings and try again.";
+    }
   });
 };
 
